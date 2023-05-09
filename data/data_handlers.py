@@ -107,9 +107,28 @@ def get_stl10_dataloader(args, labeled=False, validate=False):
     )
 
     # Get DataLoaders
-    unsupervised_loader = torch.utils.data.DataLoader(
-        unsupervised_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers,
-    )
+    try:
+        unsupervised_size = args.unsupervised_size
+        try:
+            unsupervised_size = int(unsupervised_size)
+            indices = list(range(len(unsupervised_dataset)))
+            np.random.shuffle(indices)
+            unsupervised_indices = indices[:unsupervised_size]
+            unsupervised_sampler = torch.utils.data.sampler.SubsetRandomSampler(unsupervised_indices)
+            unsupervised_loader = torch.utils.data.DataLoader(
+		        unsupervised_dataset, batch_size=args.batch_size, sampler=unsupervised_sampler, num_workers=args.num_workers,
+		    )
+        except:
+            # if unsupervised size not an integer, then set to default
+            unsupervised_loader = torch.utils.data.DataLoader(
+				unsupervised_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers
+			)
+    except AttributeError:  
+        # if argument not specified, set to default (in the train classifier script for example)
+        unsupervised_loader = torch.utils.data.DataLoader(
+		    unsupervised_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers
+		)
+        
     train_loader = torch.utils.data.DataLoader(
         train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers
     )
@@ -186,9 +205,28 @@ def get_cifar_dataloader(args, cifar_classes):
         raise Exception("Not a valid number of classes for CIFAR")
 
     # Get DataLoaders
-    unsupervised_loader = torch.utils.data.DataLoader(
-        unsupervised_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers
-    )
+    try:
+        unsupervised_size = args.unsupervised_size
+        try:
+            unsupervised_size = int(unsupervised_size)
+            indices = list(range(len(unsupervised_dataset)))
+            np.random.shuffle(indices)
+            unsupervised_indices = indices[:unsupervised_size]
+            unsupervised_sampler = torch.utils.data.sampler.SubsetRandomSampler(unsupervised_indices)
+            unsupervised_loader = torch.utils.data.DataLoader(
+		        unsupervised_dataset, batch_size=args.batch_size, sampler=unsupervised_sampler, num_workers=args.num_workers,
+		    )
+        except:
+            # if unsupervised size not an integer, then set to default
+            unsupervised_loader = torch.utils.data.DataLoader(
+				unsupervised_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers
+			)
+    except AttributeError:  
+        # if argument not specified, set to default (in the train classifier script for example)
+        unsupervised_loader = torch.utils.data.DataLoader(
+		    unsupervised_dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers
+		)
+
     test_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers
     )
