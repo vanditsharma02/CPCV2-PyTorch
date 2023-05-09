@@ -6,6 +6,7 @@ def argparser():
 
     # optional
     parser.add_argument('--dataset',          type=str,   metavar='', default="stl10",    help="Dataset to use (stl10, cifar10, cifar100)")
+    parser.add_argument('--unsupervised_size',type=str,   metavar='', default="complete", help="Set the size of the unsupervised data - default complete")
     parser.add_argument('--epochs',           type=int,   metavar='', default=300,        help="Number of Epochs for Training")
     parser.add_argument('--trained_epochs',   type=int,   metavar='', default=0,          help="Number of epochs already trained, will load from TrainedModels")
     parser.add_argument('--num_workers',      type=int,   metavar='', default=1,          help="Number of workers to be used in dataloader")
