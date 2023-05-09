@@ -39,3 +39,16 @@ There are two training functions, one for the unsupervised training and one for 
     ```
     python train_classifier.py --dataset cifar10 --train_size 10000 --epochs 100 --lr 0.1 --crop 30-2 --encoder wideresnet-28-2 --norm layer --grid_size 5 --pred_directions 4 --cpc_patch_aug --patch_aug --model_num 500    
     ```
+## Usage on Euler
+Clone this repository on Euler and place the required training datasets in the data folder.
+🆕 You can now specify the size of unsupervised dataset for training CPC. Pass the ```--unsupervised_size 10000``` argument in ```train_CPC.py``` to only use 10000 images.
+
+* Submitting an interactive job on Euler with GPU
+    ```
+    srun --gpus=1 --gres=gpumem:12g --ntasks=2 --mem-per-cpu=12G --pty python train_CPC.py --dataset stl10 --unsupervised_size 10000 --epochs 100 --crop 64-0 --encoder resnet14 --norm none --grid_size 7 --pred_steps 5 --pred_directions 1
+    ```
+* Submitting a batch job on Euler with GPU
+    ```
+    sbatch --time=4:00:00 --gpus=1 --gres=gpumem:12g --ntasks=2 --mem-per-cpu=12G --wrap="python train_CPC.py --dataset stl10 --unsupervised_size 10000 --epochs 100 --crop 64-0 --encoder resnet14 --norm none --grid_size 7 --pred_steps 5 --pred_directions 1"
+    ```
+
