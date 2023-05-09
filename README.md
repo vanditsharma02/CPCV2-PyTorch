@@ -41,6 +41,7 @@ There are two training functions, one for the unsupervised training and one for 
     ```
 ## Usage on Euler
 Clone this repository on Euler and place the required training datasets in the data folder.
+
 🆕 You can now specify the size of unsupervised dataset for training CPC. Pass the ```--unsupervised_size 10000``` argument in ```train_CPC.py``` to only use 10000 images.
 
 * Submitting an interactive job on Euler with GPU
