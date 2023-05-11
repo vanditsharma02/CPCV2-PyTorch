@@ -16,7 +16,7 @@ class InfoNCE_Loss(nn.Module):
         in_channels (int): number of channels of input tensors (size of encoding vector from encoder network and autoregressive network)
     """
     
-    def __init__(self, pred_steps, neg_samples, in_channels):
+    def __init__(self, pred_steps, neg_samples, in_channels, version, head_size):
         super().__init__()
         
         self.pred_steps = pred_steps
@@ -27,9 +27,26 @@ class InfoNCE_Loss(nn.Module):
             for _ in range(self.pred_steps)
         )
 
+        self.version = version
+        
+        if version == 'v1':
+            pass
+
+        elif version == 'v2':
+            self.z_head = nn.Conv2d(in_channels, in_channels, head_size)
+            self.c_head = nn.Conv2d(in_channels, in_channels, head_size)        
+
         self.contrast_loss = ExpNLLLoss()
 
     def forward(self, z, c, skip_step=1):
+
+        if self.version == 'v1':
+            pass
+            
+        elif self.version == 'v2':
+            z = self.z_head(z)
+            c = self.c_head(c)
+
         batch_size = z.shape[0]
         total_loss = 0
         cur_device = z.get_device()
