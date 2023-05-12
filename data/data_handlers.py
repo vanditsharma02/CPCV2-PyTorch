@@ -64,10 +64,10 @@ def get_transforms(args, eval, aug):
         if eval or not args.patch_aug:
             trans.append(transforms.Normalize(mean=aug["mean"], std=aug["std"]))
 
-    # If training CPC then patchify, if required also augment
+        # If training CPC then patchify, if required also augment
     if not args.fully_supervised:
         if not eval and args.patch_aug:
-            trans.append(PatchifyAugment(gray=args.gray, grid_size=args.grid_size))
+            trans.append(PatchifyAugment(gray=args.gray, grid_size=args.grid_size, t1=args.t1, t2=args.t2))
         else:
             trans.append(Patchify(grid_size=args.grid_size))
 

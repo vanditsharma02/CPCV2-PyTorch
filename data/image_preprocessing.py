@@ -5,7 +5,6 @@ import PIL.ImageOps as PIO
 import PIL.ImageEnhance as PIE
 import random
 
-
 class Patchify(object):     
     """Convert tensor image into grid of patches, where each path overlaps half of its neighbours
 
@@ -63,31 +62,26 @@ class PatchifyAugment(Patchify):
         grid_size (int): defines the output grid size for the patchification
     """
 
-    def __init__(self, gray, grid_size):
+    def __init__(self, gray, grid_size, t1, t2 = None):
         super().__init__(grid_size=grid_size)
         self.gray = gray
         
         # As labeled certain transformations have been written so that they
         # are applied on tensors, this alleviates the need to convert to PIL.Image
-        self.transformations = [
-            self.ShearX, # PIL
-            self.ShearY, # PIL
-            self.TranslateX, # Tensor
-            self.TranslateY, # Tensor
-            self.Rotate, # PIL
-            PIO.autocontrast, # PIL 
-            self.Invert, # Tensor
-            PIO.equalize, # PIL 
-            self.Solarize, # Tensor
-            self.Posterize, # Tensor 
-            self.Contrast, # PIL 
-            self.Brightness, # PIL 
-            self.Sharpness, # PIL 
-            self.Cutout # Tensor
-        ]
+        self.transformations = {
+            'rotate' : self.Rotate,
+            'color'  : self.Color,
+            'cutout' : self.Cutout,
+            'crop'   : self.Crop
+        }
 
-        if not gray:
-            self.transformations.append(self.Color)
+        self.t1 = t1
+        self.t2 = t2
+
+        if t2 == '':
+            self.transforms = [self.transformations[t1]]
+        else:
+            self.transforms = [self.transformations[t1], self.transformations[t2]]
 
     def __call__(self, x):
         """
@@ -99,65 +93,33 @@ class PatchifyAugment(Patchify):
         """
         # Patchify using parent class
         x = super().__call__(x) 
-        
-        self.number_of_transforms = 2
         self.patch_dim = (self.patch_size, self.patch_size)
         
-        # For each path apply augmentation as in CPC V2
+        # For each patch apply augmentation as in CPC V2
         for patch_row in range(self.grid_size):
             for patch_col in range(self.grid_size):
                 patch = x[patch_row][patch_col]
 
                 # Randomly choose two of the 16 (15 if grayscale) transformations from AutoAugment
-                for _ in range(self.number_of_transforms):
-                    rand = random.randint(0, len(self.transformations)) 
-
-                    # Tensor based functions - TranslateX/Y, Invert, Solarize, Posterize, Cutout
-                    if rand == 2 or rand == 3 or rand == 6 or rand == 8 or rand == 9 or rand == 13 : 
-                        transform = self.transformations[rand]
-                        x[patch_row][patch_col] = transform(patch)
-
-                    # Tensor based function - SamplePairing - requires two inputs
-                    elif rand == len(self.transformations):
-                        other_patch_row = random.randint(0, self.grid_size - 1)
-                        other_patch_col = random.randint(0, self.grid_size - 1)
-                        other_patch = x[other_patch_row][other_patch_col]
-
-                        x[patch_row][patch_col] = self.SamplePairing(patch, other_patch)
-
-                    # PIL functions
-                    else:   
-                        # Convert patch from tensor to PIL image
-                        patch_PIL = transforms.ToPILImage()(patch)
-
-                        # Choose transform from transformations array
-                        transform = self.transformations[rand]
-                        patch_PIL = transform(patch_PIL)
-
-                        # Convert PIL back to tensor
-                        x[patch_row][patch_col] = transforms.ToTensor()(patch_PIL)
-
-                # Add other CPCV2 Augmentations...
-
-                # 2. Using the primitives from De Fauw et al. (2018)
-                # Randomly apply elastic deformation and shearing with a probability of 0.2. 
-                # Randomly apply their colorhistogram automentations with a probability of 0.2.
-                
-                # 3. Randomly apply the color augmentations from
-                # Szegedy et al. (2014) with a probability of 0.8.
-
-                # 4. Greyscale with 25% chance
-                if random.random() < 0.25:
-                    patch_PIL = transforms.ToPILImage()(patch)
-                    patch_PIL = transforms.Grayscale()(patch_PIL)
-                    x[patch_row][patch_col] = transforms.ToTensor()(patch_PIL)
+                for transform in self.transforms:
+                    x[patch_row][patch_col] = transform(patch)
 
         return x
 
     def __repr__(self):
         return self.__class__.__name__ + f'(grid_size={self.grid_size}, gray={self.gray})'
 
-    # The following transformations either use PIL or are performed directly on Tensors
+
+    def Crop(self, patch):
+        patch_PIL = transforms.ToPILImage()(patch)
+        left = random.randint(0, 2)
+        upper = random.randint(0, 2)
+        right = left + self.patch_size - 2
+        lower = upper + self.patch_size - 2
+        patch_PIL = patch_PIL.crop((left, upper, right, lower))
+        patch_PIL = patch_PIL.resize((self.patch_size, self.patch_size))
+        return transforms.ToTensor()(patch_PIL)
+
     def ShearX(self, pil_img):
         level = random.random() * 0.6 - 0.3  # [-0.3,0.3] As in AutoAugment
         return pil_img.transform(self.patch_dim, Image.AFFINE, (1, level, 0, 0, 1, 0))
@@ -200,9 +162,11 @@ class PatchifyAugment(Patchify):
         #return pil_img.transform(self.patch_dim, Image.AFFINE, (1, 0, pixels, 0, 1, 0))
         
 
-    def Rotate(self, pil_img):
-        degrees = random.random() * 60 - 30  # [-30, 30] as in AutoSegment
-        return pil_img.rotate(degrees)
+    def Rotate(self, patch):
+        patch_PIL = transforms.ToPILImage()(patch)
+        degree = random.randint(0, 3) * 90
+        patch_PIL = patch_PIL.rotate(degree)
+        return transforms.ToTensor()(patch_PIL)
 
 
     def Invert(self, patch):
@@ -230,9 +194,12 @@ class PatchifyAugment(Patchify):
         return PIE.Contrast(pil_img).enhance(level)
 
 
-    def Color(self, pil_img):
-        level = random.random() * 1.8 + 0.1  # [0.1,1.9] As in AutoAugment
-        return PIE.Color(pil_img).enhance(level)
+    def Color(self, patch):
+        patch_PIL = transforms.ToPILImage()(patch)
+        strength = 1.0
+        patch_PIL = transforms.ColorJitter(brightness=(1-0.8*strength, 1+0.8*strength), contrast=(1-0.8*strength, 1+0.8*strength),
+                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(-0.2*strength, 0.2*strength))(patch_PIL)
+        return transforms.ToTensor()(patch_PIL)
 
 
     def Brightness(self, pil_img):
