@@ -112,10 +112,10 @@ class PatchifyAugment(Patchify):
 
     def Crop(self, patch):
         patch_PIL = transforms.ToPILImage()(patch)
-        left = random.randint(0, self.patch_size-3)
-        upper = random.randint(0, self.patch_size-3)
-        right = left + 3
-        lower = upper + 3
+        left = random.randint(0, 2)
+        upper = random.randint(0, 2)
+        right = left + self.patch_size - 2
+        lower = upper + self.patch_size - 2
         patch_PIL = patch_PIL.crop((left, upper, right, lower))
         patch_PIL = patch_PIL.resize((self.patch_size, self.patch_size))
         return transforms.ToTensor()(patch_PIL)
@@ -164,8 +164,8 @@ class PatchifyAugment(Patchify):
 
     def Rotate(self, patch):
         patch_PIL = transforms.ToPILImage()(patch)
-        degrees = random.random() * 60 - 30  # [-30, 30] as in AutoSegment
-        patch_PIL = patch_PIL.rotate(degrees)
+        degree = random.randint(0, 3) * 90
+        patch_PIL = patch_PIL.rotate(degree)
         return transforms.ToTensor()(patch_PIL)
 
 
@@ -196,8 +196,9 @@ class PatchifyAugment(Patchify):
 
     def Color(self, patch):
         patch_PIL = transforms.ToPILImage()(patch)
-        level = random.random() * 1.8 + 0.1  # [0.1,1.9] As in AutoAugment
-        patch_PIL = PIE.Color(patch_PIL).enhance(level)
+        strength = 1.0
+        patch_PIL = transforms.ColorJitter(brightness=(1-0.8*strength, 1+0.8*strength), contrast=(1-0.8*strength, 1+0.8*strength),
+                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(1-0.2*strength, 1+0.2*strength))(patch_PIL)1
         return transforms.ToTensor()(patch_PIL)
 
 
