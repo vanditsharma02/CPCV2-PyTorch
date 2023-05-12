@@ -10,7 +10,7 @@ from data.noisy_cifar import Noisy_CIFAR10, Noisy_CIFAR100
 
 import os
 import numpy as np
-
+np.random.seed(42)
 
 aug = {
     "stl10": {
