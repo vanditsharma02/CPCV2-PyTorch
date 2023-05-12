@@ -198,7 +198,7 @@ class PatchifyAugment(Patchify):
         patch_PIL = transforms.ToPILImage()(patch)
         strength = 1.0
         patch_PIL = transforms.ColorJitter(brightness=(1-0.8*strength, 1+0.8*strength), contrast=(1-0.8*strength, 1+0.8*strength),
-                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(1-0.2*strength, 1+0.2*strength))(patch_PIL)1
+                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(-0.2*strength, 0.2*strength))(patch_PIL)
         return transforms.ToTensor()(patch_PIL)
 
 
