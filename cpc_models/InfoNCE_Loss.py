@@ -16,40 +16,43 @@ class InfoNCE_Loss(nn.Module):
         in_channels (int): number of channels of input tensors (size of encoding vector from encoder network and autoregressive network)
     """
     
-    def __init__(self, pred_steps, neg_samples, in_channels, version, head_size):
+    def __init__(self, pred_steps, neg_samples, in_channels, version, grid_size, out_channels=64):
         super().__init__()
         
         self.pred_steps = pred_steps
         self.neg_samples = neg_samples
 
         self.W_k = nn.ModuleList(
-            nn.Conv2d(in_channels, in_channels, 1, bias=False)
+            nn.Conv2d(out_channels, out_channels, 1, bias=False)
             for _ in range(self.pred_steps)
         )
 
         self.version = version
-        
+        self.grid_size = grid_size 
+
         if version == 'v1':
             pass
 
         elif version == 'v2':
-            self.z_head = nn.Conv2d(in_channels, in_channels, head_size)
-            self.c_head = nn.Conv2d(in_channels, in_channels, head_size)        
+            self.z_head_linear = nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*out_channels)
+            self.c_head_linear = nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*out_channels)        
 
         self.contrast_loss = ExpNLLLoss()
 
     def forward(self, z, c, skip_step=1):
+        
+        batch_size = z.shape[0]
+        total_loss = 0
+        cur_device = z.get_device()
 
         if self.version == 'v1':
             pass
             
         elif self.version == 'v2':
-            z = self.z_head(z)
-            c = self.c_head(c)
-
-        batch_size = z.shape[0]
-        total_loss = 0
-        cur_device = z.get_device()
+            z = torch.flatten(z, start_dim=1)
+            c = torch.flatten(c, start_dim=1)
+            z = self.z_head_linear(z).reshape(batch_size, -1, self.grid_size, self.grid_size)
+            c = self.c_head_linear(c).reshape(batch_size, -1, self.grid_size, self.grid_size)
 
         # For each element in c, contrast with elements below
         for k in range(1, self.pred_steps + 1):

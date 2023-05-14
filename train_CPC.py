@@ -118,7 +118,7 @@ if __name__ == "__main__":
     ar = PixelCNN(in_channels=enc.encoding_size)
 
     # Define CPC Network
-    net = CPC(enc, ar, args.pred_directions, args.pred_steps, args.neg_samples,  args.version, args.head_size)
+    net = CPC(enc, ar, args.pred_directions, args.pred_steps, args.neg_samples, args.version, args.grid_size, args.out_channels)
     if args.trained_epochs:
         net.load_state_dict(torch.load(
             f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{args.trained_epochs}{args.model_name_ext}.pt"))

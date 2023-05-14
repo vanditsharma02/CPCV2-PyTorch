@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": ["--dataset", "cifar10", "--epochs", "30", "--crop", "30-2", "--encoder", "wideresnet-28-2", "--norm", "layer", "--grid_size", "5", 
-                     "--pred_steps", "1", "--pred_directions", "4", "--patch_aug", "--download_dataset", "--t1", "color", "--t2", "cutout", "--unsupervised_size", "1000", "--version","v2"],
+                     "--pred_steps", "3", "--pred_directions", "4", "--patch_aug", "--download_dataset", "--t1", "color", "--t2", "cutout", "--unsupervised_size", "1000", "--version","v2"],
             "justMyCode": true,
             "purpose": ["debug-in-terminal"]
         }
