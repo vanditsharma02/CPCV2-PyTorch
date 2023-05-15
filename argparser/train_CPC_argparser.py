@@ -30,7 +30,7 @@ def argparser():
 
     parser.add_argument('--t1',               type=str,    metavar='', default="",        help="1st transformation: crop; cutout; color; rotate")       
     parser.add_argument('--t2',               type=str,    metavar='', default="",        help="2nd transformation: crop; cutout; color; rotate")  
-
+    
     args = parser.parse_args()
 
     # Add to args given the input choices
