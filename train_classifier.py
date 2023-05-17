@@ -134,7 +134,7 @@ if __name__ == "__main__":
 
         colour = "_colour" if (not args.gray) else ""
         encoder_path = os.path.join("TrainedModels", args.dataset, "trained_encoder")
-        encoder_path = f"{encoder_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.cpc_patch_aug}_{args.model_num}_{args.t1}_{args.t2}.pt"
+        encoder_path = f"{encoder_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.cpc_patch_aug}_{args.model_num}_{args.t1}_{args.t2}_{args.version}_{args.hidden_size}.pt"
         
         net.load_state_dict(torch.load(encoder_path))
         net.to(args.device)

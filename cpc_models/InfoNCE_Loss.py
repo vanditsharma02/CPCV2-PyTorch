@@ -16,14 +16,14 @@ class InfoNCE_Loss(nn.Module):
         in_channels (int): number of channels of input tensors (size of encoding vector from encoder network and autoregressive network)
     """
     
-    def __init__(self, pred_steps, neg_samples, in_channels, version, grid_size, out_channels=64):
+    def __init__(self, pred_steps, neg_samples, in_channels, version, grid_size, hidden_size):
         super().__init__()
         
         self.pred_steps = pred_steps
         self.neg_samples = neg_samples
 
         self.W_k = nn.ModuleList(
-            nn.Conv2d(out_channels, out_channels, 1, bias=False)
+            nn.Conv2d(hidden_size, hidden_size, 1, bias=False)
             for _ in range(self.pred_steps)
         )
 
@@ -34,8 +34,17 @@ class InfoNCE_Loss(nn.Module):
             pass
 
         elif version == 'v2':
-            self.z_head_linear = nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*out_channels)
-            self.c_head_linear = nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*out_channels)        
+            self.z_head_layer = nn.Sequential(
+                nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*hidden_size),
+                nn.ReLU(),
+                nn.Linear((self.grid_size**2)*hidden_size, (self.grid_size**2)*hidden_size)
+                )
+            self.c_head_layer = nn.Sequential(
+                nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*hidden_size),
+                nn.ReLU(),
+                nn.Linear((self.grid_size**2)*hidden_size, (self.grid_size**2)*hidden_size)
+                )
+                
 
         self.contrast_loss = ExpNLLLoss()
 
@@ -51,8 +60,8 @@ class InfoNCE_Loss(nn.Module):
         elif self.version == 'v2':
             z = torch.flatten(z, start_dim=1)
             c = torch.flatten(c, start_dim=1)
-            z = self.z_head_linear(z).reshape(batch_size, -1, self.grid_size, self.grid_size)
-            c = self.c_head_linear(c).reshape(batch_size, -1, self.grid_size, self.grid_size)
+            z = self.z_head_layer(z).reshape(batch_size, -1, self.grid_size, self.grid_size)
+            c = self.c_head_layer(c).reshape(batch_size, -1, self.grid_size, self.grid_size)
 
         # For each element in c, contrast with elements below
         for k in range(1, self.pred_steps + 1):

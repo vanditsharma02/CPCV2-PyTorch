@@ -53,3 +53,7 @@ Clone this repository on Euler and place the required training datasets in the d
     sbatch --time=4:00:00 --gpus=1 --gres=gpumem:12g --ntasks=2 --mem-per-cpu=12G --wrap="python train_CPC.py --dataset stl10 --unsupervised_size 10000 --epochs 100 --crop 64-0 --encoder resnet14 --norm none --grid_size 7 --pred_steps 5 --pred_directions 1"
     ```
 
+
+    python train_classifier.py --dataset cifar10 --train_size 2000 --epochs 50 --lr 0.1 --crop 30-2 --encoder wideresnet-16-2 --norm none --grid_size 5 --pred_directions 1 --cpc_patch_aug --model_num 100 --t1 color --t2 rotate
+
+    python train_CPC.py --dataset  cifar10 --epochs 100 --crop 30-2 --encoder wideresnet-16-2 --norm none --grid_size 5 --pred_steps 3 --pred_directions 1 --patch_aug --t1 color --t2 cutout --unsupervised_size 10000

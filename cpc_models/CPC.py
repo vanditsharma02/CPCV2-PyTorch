@@ -22,7 +22,7 @@ class CPC(nn.Module):
         neg_samples (int): number of negative samples to be used for contrastive loss
     """
 
-    def __init__(self, encoderNet, arNet, pred_directions, pred_steps, neg_samples,  version, grid_size, out_channels=64):
+    def __init__(self, encoderNet, arNet, pred_directions, pred_steps, neg_samples,  version, grid_size, hidden_size=64):
         super().__init__()
         
         self.pred_directions = pred_directions
@@ -36,7 +36,7 @@ class CPC(nn.Module):
 
         # Define Predictive + Loss Networks
         self.pred_loss = nn.ModuleList(
-            InfoNCE_Loss(pred_steps=pred_steps, neg_samples=neg_samples, in_channels=encoderNet.encoding_size, version=version, grid_size=grid_size, out_channels=out_channels) 
+            InfoNCE_Loss(pred_steps=pred_steps, neg_samples=neg_samples, in_channels=encoderNet.encoding_size, version=version, grid_size=grid_size, hidden_size=hidden_size) 
             for _ in range(self.pred_directions)
         )
 
