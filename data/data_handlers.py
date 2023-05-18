@@ -35,50 +35,106 @@ aug = {
 }
 
 # Get transformations that are applied to "entire" image
-def get_transforms(args, eval, aug):
-    trans = []
+
+class Crop(object):
+    def __call__(self, sample):
+        image_PIL = transforms.ToPILImage()(sample)
+        self.image_size = sample.shape[0]
+        left = random.randint(0, 2)
+        upper = random.randint(0, 2)
+        right = left + self.image_size - 2
+        lower = upper + self.image_size - 2
+        image_PIL = image_PIL.crop((left, upper, right, lower))
+        image_PIL = image_PIL.resize((self.image_size, self.image_size))
+        return transforms.ToTensor()(image_PIL)
     
-    # Crop full image
+class Rotate(object):
+    def __call__(self, sample):
+        image_PIL = transforms.ToPILImage()(sample)
+        degree = random.randint(0, 3) * 90
+        image_PIL = image_PIL.rotate(degree)
+        return transforms.ToTensor()(patch_PIL)
+
+class Cutout(object):
+    def __call__(self, sample):
+        image_PIL = transforms.ToPILImage()(sample)
+        self.image_size = sample.shape[0]
+        size = random.randint(1, int(self.image_size/3))
+        x_coord = random.randint(0, self.image_size - size)
+        y_coord = random.randint(0, self.image_size - size)
+        image_PIL[:, x_coord:x_coord+size, y_coord:y_coord+size] = 0.5
+        return image_PIL
+
+class Color(object):
+    def __call__(self, sample):
+        image_PIL = transforms.ToPILImage()(sample)
+        strength = 1.0
+        image_PIL = transforms.ColorJitter(brightness=(1-0.8*strength, 1+0.8*strength), contrast=(1-0.8*strength, 1+0.8*strength),
+                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(-0.2*strength, 0.2*strength))(image_PIL)
+        return transforms.ToTensor()(image_PIL)
+   
+
+
+def get_transforms(args, eval, aug):
+    
+    transformations = []
+
     if not eval:
-        trans.append(transforms.RandomCrop(args.crop_size, args.padding))
+        transformations.append(transforms.RandomCrop(args.crop_size, args.padding))
     else:
-        trans.append(transforms.CenterCrop(args.crop_size))
+        transformations.append(transforms.CenterCrop(args.crop_size))
 
     # Resize image after cropping
     if args.image_resize:
-        trans.append(transforms.Resize(args.image_resize))
-
-    # Flip image
+        transformations.append(transforms.Resize(args.image_resize))
+    
     if not eval:
-        trans.append(transforms.RandomHorizontalFlip())
+        transformations.append(transforms.RandomHorizontalFlip())
 
     # Grayscale, Convert to Tensor and Normalize
     if args.gray:
-        trans.append(transforms.Grayscale())
-        trans.append(transforms.ToTensor())
+        transformations.append(transforms.Grayscale())
+        transformations.append(transforms.ToTensor())
         if eval or not args.patch_aug:
-            trans.append(transforms.Normalize(mean=aug["bw_mean"], std=aug["bw_std"]))
+            transformations.append(transforms.Normalize(mean=aug["bw_mean"], std=aug["bw_std"]))
     else:
         #trans.append(transforms.RandomGrayscale(p=0.25)) # As in CPCV2
-        trans.append(transforms.ToTensor())
+        transformations.append(transforms.ToTensor())
         if eval or not args.patch_aug:
-            trans.append(transforms.Normalize(mean=aug["mean"], std=aug["std"]))
+            transformations.append(transforms.Normalize(mean=aug["mean"], std=aug["std"]))
 
+    if not eval:
+        transformations_dict = {
+                'rotate' : Rotate(),
+                'color'  : Color(),
+                'cutout' : Cutout(),
+                'crop'   : Crop()
+            }
+        
+        t1 = args.t1
+        t2 = args.t2
+        
+        if t2 == '':
+            transformations.append(transformations_dict[t1])
+        else:   
+            transformations.append(transformations_dict[t1])
+            transformations.append(transformations_dict[t2])
+    
         # If training CPC then patchify, if required also augment
     if not args.fully_supervised:
         if not eval and args.patch_aug:
-            trans.append(PatchifyAugment(gray=args.gray, grid_size=args.grid_size, t1=args.t1, t2=args.t2))
+            transformations.append(PatchifyAugment(gray=args.gray, grid_size=args.grid_size, t1=args.t1, t2=args.t2))
         else:
-            trans.append(Patchify(grid_size=args.grid_size))
+            transformations.append(Patchify(grid_size=args.grid_size))
 
     # If patch_aug then normalization goes last
     if not eval and args.patch_aug:
         if args.gray:
-            trans.append(PatchAugNormalize(mean=aug["bw_mean"], std=aug["bw_std"]))
+            transformations.append(PatchAugNormalize(mean=aug["bw_mean"], std=aug["bw_std"]))
         else:
-            trans.append(PatchAugNormalize(mean=aug["mean"], std=aug["std"]))
+            transformations.append(PatchAugNormalize(mean=aug["mean"], std=aug["std"]))
 
-    trans = transforms.Compose(trans)
+    trans = transforms.Compose(transformations)
 
     s = "Testing" if eval else "Training"
     print(s + ": " + str(trans))
