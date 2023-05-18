@@ -35,14 +35,14 @@ class InfoNCE_Loss(nn.Module):
 
         elif version == 'v2':
             self.z_head_layer = nn.Sequential(
-                nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*hidden_size),
+                nn.Linear(in_channels, hidden_size),
                 nn.ReLU(),
-                nn.Linear((self.grid_size**2)*hidden_size, (self.grid_size**2)*hidden_size)
+                nn.Linear(hidden_size, hidden_size)
                 )
             self.c_head_layer = nn.Sequential(
-                nn.Linear((self.grid_size**2)*in_channels, (self.grid_size**2)*hidden_size),
+                nn.Linear(in_channels, hidden_size),
                 nn.ReLU(),
-                nn.Linear((self.grid_size**2)*hidden_size, (self.grid_size**2)*hidden_size)
+                nn.Linear(hidden_size, hidden_size)
                 )
                 
 
@@ -58,10 +58,13 @@ class InfoNCE_Loss(nn.Module):
             pass
             
         elif self.version == 'v2':
-            z = torch.flatten(z, start_dim=1)
-            c = torch.flatten(c, start_dim=1)
+            z = z.reshape(batch_size*(self.grid_size**2), -1)
+            c = c.reshape(batch_size*(self.grid_size**2), -1)
+#            z = torch.flatten(z, start_dim=1)
+#            c = torch.flatten(c, start_dim=1)
             z = self.z_head_layer(z).reshape(batch_size, -1, self.grid_size, self.grid_size)
-            c = self.c_head_layer(c).reshape(batch_size, -1, self.grid_size, self.grid_size)
+            c = self.c_head_layer(c).reshape(batch_size, -1, self.grid_size, self.grid_size)   
+
 
         # For each element in c, contrast with elements below
         for k in range(1, self.pred_steps + 1):

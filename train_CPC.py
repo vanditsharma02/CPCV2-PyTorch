@@ -89,9 +89,9 @@ def distribute_over_GPUs(args, net):
 def save(net, epochs):
     saveNet = net.module  # unwrap DataParallel
     torch.save(saveNet.state_dict(),
-               f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}_{args.t1}_{args.t2}.pt")
+               f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}_{args.t1}_{args.t2}_{args.version}_{args.hidden_size}.pt")
     torch.save(saveNet.enc.state_dict(),
-               f"{encoder_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}_{args.t1}_{args.t2}.pt")
+               f"{encoder_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}_{args.t1}_{args.t2}_{args.version}_{args.hidden_size}.pt")
 
 
 if __name__ == "__main__":
