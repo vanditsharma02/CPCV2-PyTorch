@@ -35,7 +35,7 @@ def argparser():
     parser.add_argument('--t2',               type=str,   metavar='', default='',         help='2nd transformation applied when training CPC model')
 
     parser.add_argument('--version',          type=str,    metavar='', default='v1',      help="The version of model we are training") ##########################
-    parser.add_argument('--hidden_size',      type=int,    metavar='', default=64,        help="Size of the head kernel for both context and representation") ##########################
+    parser.add_argument('--hidden_size',      type=int,    metavar='', default=256,        help="Size of the head kernel for both context and representation") ##########################
 
     args = parser.parse_args()
 
