@@ -70,8 +70,8 @@ class Wide_ResNet_Encoder(nn.Module):
         bias = True if (args.norm == "none") else False
 
         self.conv1 = nn.Conv2d(input_channels, nStages[0], kernel_size=3, stride=1, padding=1, bias=bias)
-        #self.layer1 = self._wide_layer(args, wide_basic, nStages[1], n, dropout_rate, stride=1)
-        #self.layer2 = self._wide_layer(args, wide_basic, nStages[2], n, dropout_rate, stride=2)
+        self.layer1 = self._wide_layer(args, wide_basic, nStages[1], n, dropout_rate, stride=1)
+        self.layer2 = self._wide_layer(args, wide_basic, nStages[2], n, dropout_rate, stride=2)
         self.layer3 = self._wide_layer(args, wide_basic, nStages[3], n, dropout_rate, stride=2)
         self.norm1 = norm2d(nStages[3], args.norm) #changed from nStages[2] to nStages[0]
         self.avgpool = nn.AdaptiveAvgPool2d(1)
@@ -98,8 +98,8 @@ class Wide_ResNet_Encoder(nn.Module):
 
         # Run the model
         z = self.conv1(x)
-        #z = self.layer1(z)
-        #z = self.layer2(z)
+        z = self.layer1(z)
+        z = self.layer2(z)
         z = self.layer3(z)
         z = F.relu(self.norm1(z))
         z = self.avgpool(z)
