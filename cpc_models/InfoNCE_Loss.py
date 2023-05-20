@@ -58,12 +58,10 @@ class InfoNCE_Loss(nn.Module):
             pass
             
         elif self.version == 'v2':
-            z = z.reshape(batch_size*(self.grid_size**2), -1)
-            c = c.reshape(batch_size*(self.grid_size**2), -1)
-#            z = torch.flatten(z, start_dim=1)
-#            c = torch.flatten(c, start_dim=1)
-            z = self.z_head_layer(z).reshape(batch_size, -1, self.grid_size, self.grid_size)
-            c = self.c_head_layer(c).reshape(batch_size, -1, self.grid_size, self.grid_size)   
+            z = z.permute(0, 2, 3, 1).reshape(batch_size*(self.grid_size**2), -1)
+            c = c.permute(0, 2, 3, 1).reshape(batch_size*(self.grid_size**2), -1)
+            z = self.z_head_layer(z).reshape(batch_size, self.grid_size, self.grid_size, -1).permute(0, 3, 1, 2)
+            c = self.c_head_layer(c).reshape(batch_size, self.grid_size, self.grid_size, -1).permute(0, 3, 1, 2) 
 
 
         # For each element in c, contrast with elements below
