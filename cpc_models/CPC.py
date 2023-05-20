@@ -22,7 +22,7 @@ class CPC(nn.Module):
         neg_samples (int): number of negative samples to be used for contrastive loss
     """
 
-    def __init__(self, encoderNet, arNet, pred_directions, pred_steps, neg_samples,  version, grid_size, hidden_size=64):
+    def __init__(self, encoderNet, arNet, pred_directions, pred_steps, neg_samples,  version, grid_size, hidden_size):
         super().__init__()
         
         self.pred_directions = pred_directions

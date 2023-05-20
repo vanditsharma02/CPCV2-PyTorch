@@ -37,12 +37,12 @@ class InfoNCE_Loss(nn.Module):
             self.z_head_layer = nn.Sequential(
                 nn.Linear(in_channels, in_channels),
                 nn.ReLU(),
-                nn.Linear(in_channels, in_channels*2)
+                nn.Linear(in_channels, hidden_size)
                 )
             self.c_head_layer = nn.Sequential(
                 nn.Linear(in_channels, in_channels),
                 nn.ReLU(),
-                nn.Linear(in_channels, in_channels*2)
+                nn.Linear(in_channels, hidden_size)
                 )
                 
 
