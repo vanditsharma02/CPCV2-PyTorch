@@ -39,39 +39,38 @@ aug = {
 class Crop(object):
     def __call__(self, sample):
         image_PIL = transforms.ToPILImage()(sample)
-        self.image_size = sample.shape[0]
-        left = random.randint(0, 2)
-        upper = random.randint(0, 2)
-        right = left + self.image_size - 2
-        lower = upper + self.image_size - 2
+        self.image_size = sample.shape[1]
+        left = random.randint(0, 6)
+        upper = random.randint(0, 6)
+        right = left + self.image_size - 6
+        lower = upper + self.image_size - 6
         image_PIL = image_PIL.crop((left, upper, right, lower))
         image_PIL = image_PIL.resize((self.image_size, self.image_size))
         return transforms.ToTensor()(image_PIL)
     
 class Rotate(object):
-    def __call__(self, sample):
-        image_PIL = transforms.ToPILImage()(sample)
+    def __call__(self, img):
+        image_PIL = transforms.ToPILImage()(img)
         degree = random.randint(0, 3) * 90
         image_PIL = image_PIL.rotate(degree)
-        return transforms.ToTensor()(patch_PIL)
+        return transforms.ToTensor()(image_PIL)
 
 class Cutout(object):
-    def __call__(self, sample):
-        image_PIL = transforms.ToPILImage()(sample)
-        self.image_size = sample.shape[0]
+    def __call__(self, img):
+        self.image_size = img.shape[0]
         size = random.randint(1, int(self.image_size/3))
         x_coord = random.randint(0, self.image_size - size)
         y_coord = random.randint(0, self.image_size - size)
-        image_PIL[:, x_coord:x_coord+size, y_coord:y_coord+size] = 0.5
-        return image_PIL
+        img[:, x_coord:x_coord+size, y_coord:y_coord+size] = 0.5
+        return img
+
 
 class Color(object):
-    def __call__(self, sample):
-        image_PIL = transforms.ToPILImage()(sample)
+    def __call__(self, img):
         strength = 1.0
-        image_PIL = transforms.ColorJitter(brightness=(1-0.8*strength, 1+0.8*strength), contrast=(1-0.8*strength, 1+0.8*strength),
-                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(-0.2*strength, 0.2*strength))(image_PIL)
-        return transforms.ToTensor()(image_PIL)
+        transformed_img = transforms.ColorJitter(brightness=(1-0.8*strength, 1+0.8*strength), contrast=(1-0.8*strength, 1+0.8*strength),
+                                           saturation=(1-0.8*strength, 1+0.8*strength), hue=(-0.2*strength, 0.2*strength))(img)
+        return transformed_img
    
 
 
@@ -91,19 +90,11 @@ def get_transforms(args, eval, aug):
     if not eval:
         transformations.append(transforms.RandomHorizontalFlip())
 
-    # Grayscale, Convert to Tensor and Normalize
-    if args.gray:
-        transformations.append(transforms.Grayscale())
-        transformations.append(transforms.ToTensor())
-        if eval or not args.patch_aug:
-            transformations.append(transforms.Normalize(mean=aug["bw_mean"], std=aug["bw_std"]))
-    else:
-        #trans.append(transforms.RandomGrayscale(p=0.25)) # As in CPCV2
-        transformations.append(transforms.ToTensor())
-        if eval or not args.patch_aug:
-            transformations.append(transforms.Normalize(mean=aug["mean"], std=aug["std"]))
+
+    transformations.append(transforms.ToTensor())
 
     if not eval:
+
         transformations_dict = {
                 'rotate' : Rotate(),
                 'color'  : Color(),
@@ -114,25 +105,19 @@ def get_transforms(args, eval, aug):
         t1 = args.t1
         t2 = args.t2
         
+        
         if t2 == '':
             transformations.append(transformations_dict[t1])
         else:   
             transformations.append(transformations_dict[t1])
             transformations.append(transformations_dict[t2])
-    
+
+#    if eval or not args.patch_aug:
+#        transformations.append(transforms.Normalize(mean=aug["mean"], std=aug["std"]))
+
         # If training CPC then patchify, if required also augment
     if not args.fully_supervised:
-        if not eval and args.patch_aug:
-            transformations.append(PatchifyAugment(gray=args.gray, grid_size=args.grid_size, t1=args.t1, t2=args.t2))
-        else:
-            transformations.append(Patchify(grid_size=args.grid_size))
-
-    # If patch_aug then normalization goes last
-    if not eval and args.patch_aug:
-        if args.gray:
-            transformations.append(PatchAugNormalize(mean=aug["bw_mean"], std=aug["bw_std"]))
-        else:
-            transformations.append(PatchAugNormalize(mean=aug["mean"], std=aug["std"]))
+        transformations.append(Patchify(grid_size=args.grid_size))
 
     trans = transforms.Compose(transformations)
 
