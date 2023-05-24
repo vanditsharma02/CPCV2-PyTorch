@@ -89,9 +89,9 @@ def distribute_over_GPUs(args, net):
 def save(net, epochs):
     saveNet = net.module  # unwrap DataParallel
     torch.save(saveNet.state_dict(),
-               f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}.pt")
+               f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}_{args.t1}_{args.t2}.pt")
     torch.save(saveNet.enc.state_dict(),
-               f"{encoder_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}.pt")
+               f"{encoder_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{epochs}{args.model_name_ext}_{args.t1}_{args.t2}.pt")
 
 
 if __name__ == "__main__":
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     net = CPC(enc, ar, args.pred_directions, args.pred_steps, args.neg_samples)
     if args.trained_epochs:
         net.load_state_dict(torch.load(
-            f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{args.trained_epochs}{args.model_name_ext}.pt"))
+            f"{cpc_path}_{args.encoder}_crop{args.crop}{colour}_grid{args.grid_size}_{args.norm}Norm_{args.pred_directions}dir_aug{args.patch_aug}_{args.trained_epochs}{args.model_name_ext}_{args.t1}_{args.t2}.pt"))
     
     net = distribute_over_GPUs(args, net)
 
